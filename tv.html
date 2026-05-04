@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>INFITV</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0f0f18;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: 'Space Mono', monospace;
+      overflow: hidden;
+    }
+
+    .tv-frame {
+      position: relative;
+      width: 240px;
+      background: #1a1a28;
+      border: 2px solid #2a2a40;
+      border-radius: 24px;
+      padding: 16px;
+      box-shadow: 0 0 40px rgba(255,107,53,0.15), inset 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    .tv-screen {
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: #0a0a12;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid #333;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tv-screen img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    .tv-screen .idle {
+      text-align: center;
+      color: #444;
+    }
+
+    .tv-screen .idle .icon { font-size: 2.5rem; display: block; margin-bottom: 8px; opacity: 0.3; }
+    .tv-screen .idle span { font-size: 0.55rem; letter-spacing: 3px; text-transform: uppercase; }
+
+    .tv-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #2a2a3a;
+    }
+
+    .tv-branding {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 0.9rem;
+      letter-spacing: 3px;
+      background: linear-gradient(135deg, #ff6b35, #ffd166);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    #taco-button {
+      background: linear-gradient(135deg, #ff6b35, #ef476f);
+      border: none;
+      border-radius: 8px;
+      padding: 7px 14px;
+      color: white;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+
+    #taco-button:hover { opacity: 0.8; transform: scale(1.05); }
+    #taco-button:active { transform: scale(0.97); }
+
+    .scanlines {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(0,0,0,0.08) 3px,
+        rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="tv-frame">
+    <div class="tv-screen">
+      <div class="scanlines"></div>
+      <div class="idle" id="idle-state">
+        <span class="icon">📺</span>
+        <span>Press INFI </span>
+      </div>
+      <div id="image" style="position:absolute;inset:0;display:none"></div>
+    </div>
+
+    <div class="tv-footer">
+      <div class="tv-branding">INFITV</div>
+      <button id="taco-button">INFI</button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script>
+    $("#taco-button").on("click", function() {
+      $.ajax({
+        url: "https://api.giphy.com/v1/gifs/random?api_key=VbO0v0QyJkV8hCyqw89KiNvWF4Wu8iAO&tag=taco",
+        method: "GET"
+      }).then(function(response) {
+        var imageUrl = response.data.image_original_url;
+        var img = $("<img>").attr("src", imageUrl).attr("alt", "taco gif");
+        $("#idle-state").hide();
+        $("#image").empty().append(img).show();
+      });
+    });
+  </script>
+</body>
+</html>

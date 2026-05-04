@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌮   Infinity's— Playlist Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #0a0a0f;
+      --surface:   #111118;
+      --card:      #16161f;
+      --border:    #2a2a3a;
+      --accent1:   #ff6b35;   /* fiery orange */
+      --accent2:   #ffd166;   /* warm yellow */
+      --accent3:   #06d6a0;   /* mint green */
+      --accent4:   #ef476f;   /* hot pink */
+      --text:      #f0ede8;
+      --muted:     #7a7a9a;
+      --glow:      rgba(255, 107, 53, 0.35);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ─── ANIMATED GRAIN OVERLAY ─── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.5;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 40px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #0f0f1a 0%, #1a0a0f 100%);
+      overflow: hidden;
+    }
+
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent4), var(--accent1), var(--accent2), var(--accent3));
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    #tacoicon {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      border: 2px solid var(--accent1);
+      box-shadow: 0 0 20px var(--glow);
+      animation: pulse-icon 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse-icon {
+      0%, 100% { box-shadow: 0 0 15px var(--glow); }
+      50%       { box-shadow: 0 0 35px var(--glow), 0 0 60px rgba(255,107,53,0.2); }
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.2rem;
+      line-height: 1;
+      letter-spacing: 3px;
+      background: linear-gradient(135deg, var(--accent1) 0%, var(--accent2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .brand-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 4px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .header-pill {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 2px;
+      color: var(--accent3);
+      border: 1px solid var(--accent3);
+      padding: 5px 14px;
+      border-radius: 100px;
+      animation: blink-border 2s ease-in-out infinite;
+    }
+
+    @keyframes blink-border {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    /* ─── MAIN GRID ─── */
+    .app-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.1fr 1fr;
+      gap: 0;
+      min-height: calc(100vh - 120px);
+    }
+
+    .panel {
+      border-right: 1px solid var(--border);
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .panel:last-child { border-right: none; }
+
+    .panel-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 4px;
+      color: var(--muted);
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .panel-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .panel-label .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--accent1);
+      box-shadow: 0 0 8px var(--accent1);
+      flex-shrink: 0;
+    }
+
+    /* ─── SEARCH PANEL ─── */
+    .search-box {
+      display: flex;
+      gap: 0;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .search-box:focus-within {
+      border-color: var(--accent1);
+      box-shadow: 0 0 20px rgba(255,107,53,0.2);
+    }
+
+    #search-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      padding: 14px 18px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+    }
+
+    #search-input::placeholder { color: var(--muted); }
+
+    #searchButton {
+      background: linear-gradient(135deg, var(--accent1), var(--accent4));
+      border: none;
+      padding: 14px 22px;
+      color: white;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    #searchButton:hover { opacity: 0.85; }
+    #searchButton:active { transform: scale(0.97); }
+
+    .search-results-wrap {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-right: 4px;
+    }
+
+    .search-results-wrap::-webkit-scrollbar { width: 3px; }
+    .search-results-wrap::-webkit-scrollbar-track { background: transparent; }
+    .search-results-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .search-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: var(--muted);
+    }
+
+    .search-empty .big-icon { font-size: 3rem; opacity: 0.3; }
+    .search-empty p { font-size: 0.8rem; font-family: 'Space Mono', monospace; letter-spacing: 1px; }
+
+    .search-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 60px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      transition: border-color 0.2s, transform 0.2s;
+      animation: slide-in 0.3s ease forwards;
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    @keyframes slide-in {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .search-card:hover {
+      border-color: var(--accent1);
+      transform: translateX(4px);
+    }
+
+    .search-card img {
+      width: 60px; height: 60px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+
+    .search-card-info { overflow: hidden; }
+
+    .search-card-title {
+      font-weight: 500;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text);
+    }
+
+    .search-card-artist {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .search-card-album {
+      font-size: 0.7rem;
+      color: var(--accent2);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .search-card-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .btn-add {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: transparent;
+      border: 1.5px solid var(--accent3);
+      color: var(--accent3);
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      display: flex; align-items: center; justify-content: center;
+      line-height: 1;
+    }
+
+    .btn-add:hover {
+      background: var(--accent3);
+      color: var(--bg);
+      transform: scale(1.15);
+    }
+
+    .audio-preview {
+      width: 100%;
+    }
+
+    audio {
+      width: 100%;
+      height: 28px;
+      accent-color: var(--accent1);
+    }
+
+    audio::-webkit-media-controls-panel {
+      background: var(--card);
+    }
+
+    /* ─── MIDDLE PANEL (PLAYLIST / TV) ─── */
+    .tacotv-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      aspect-ratio: 1;
+      position: relative;
+    }
+
+    .tacotv-wrap iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .tacotv-label {
+      position: absolute;
+      top: 12px; left: 12px;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(6px);
+      border: 1px solid var(--accent4);
+      color: var(--accent4);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 3px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      pointer-events: none;
+    }
+
+    #playlist {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-right: 4px;
+    }
+
+    #playlist::-webkit-scrollbar { width: 3px; }
+    #playlist::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .playlist-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 0.8rem;
+      color: var(--text);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      animation: slide-in 0.25s ease forwards;
+    }
+
+    .playlist-item span { flex: 1; line-height: 1.4; }
+
+    .btn-delete {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: transparent;
+      border: 1px solid var(--accent4);
+      color: var(--accent4);
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .btn-delete:hover { background: var(--accent4); color: white; }
+
+    #playlistExport {
+      background: linear-gradient(135deg, var(--accent2) 0%, var(--accent1) 100%);
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      color: var(--bg);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 3px;
+      cursor: pointer;
+      width: 100%;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+
+    #playlistExport:hover { opacity: 0.85; transform: translateY(-2px); }
+
+    /* ─── CAROUSEL / TRENDING PANEL ─── */
+    .trending-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      letter-spacing: 3px;
+      line-height: 1;
+      color: var(--text);
+    }
+
+    .trending-sub {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    .carousel-wrap {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--card);
+      border: 1px solid var(--border);
+    }
+
+    .carousel-slides { position: relative; aspect-ratio: 4/3; }
+
+    .carousel-slide {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+
+    .carousel-slide.active { opacity: 1; }
+
+    .carousel-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .carousel-slide-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 20px;
+    }
+
+    .carousel-slide-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 2px;
+      color: white;
+    }
+
+    .carousel-slide-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 3px;
+      color: var(--accent2);
+      margin-bottom: 4px;
+    }
+
+    .carousel-controls {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .carousel-btn {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .carousel-btn:hover { background: rgba(255,255,255,0.3); }
+
+    .carousel-dots {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      padding: 12px;
+      background: var(--card);
+    }
+
+    .carousel-dot {
+      width: 6px; height: 6px;
+      border-radius: 3px;
+      background: var(--border);
+      cursor: pointer;
+      transition: background 0.2s, width 0.2s;
+    }
+
+    .carousel-dot.active {
+      background: var(--accent1);
+      width: 20px;
+    }
+
+    #playlist-info {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    #playlist-info::-webkit-scrollbar { width: 3px; }
+    #playlist-info::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .track-chip {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      animation: slide-in 0.25s ease forwards;
+    }
+
+    .track-chip strong {
+      color: var(--text);
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 14px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+
+    footer span { color: var(--accent1); }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 900px) {
+      .app-grid { grid-template-columns: 1fr; }
+      .panel { border-right: none; border-bottom: 1px solid var(--border); }
+      header { padding: 14px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="header-left">
+    <img id="tacoicon" src="tacomusic.png" alt="Taco mascot">
+    <div class="brand">
+      <div class="brand-name">INFINITY TV.</div>
+      <div class="brand-sub">Playlist Generator</div>
+    </div>
+  </div>
+  <div class="header-pill">● </div>
+</header>
+
+<!-- ── MAIN 3-COLUMN GRID ── -->
+<main class="app-grid">
+
+  <!-- ─ COLUMN 1: SEARCH ─ -->
+  <section class="panel">
+    <div class="panel-label"><span class="dot"></span>Search Tracks</div>
+
+    <form id="search-form">
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="Artist, song, or album…">
+        <input id="searchButton" type="submit" value="GO">
+      </div>
+    </form>
+
+    <div class="search-results-wrap" id="search-results">
+      <div class="search-empty">
+        <div class="big-icon">🎵</div>
+        <p>Search for something</p>
+      </div>
+    </div>
+  </section>
+
+ 
+  <!-- ─ COLUMN 3: TRENDING ─ -->
+  <section class="panel">
+    <div class="panel-label"><span class="dot" style="background:var(--accent2)"></span>Trending</div>
+
+    <div>
+      <div class="trending-title">Hot Playlists</div>
+    </div>
+
+    <div class="carousel-wrap">
+      <div class="carousel-slides">
+        <div class="carousel-slide active" id="slide-0">
+          <img id="picture-1" src="images/popworkout.jpg" alt="Pop Workout" style="cursor:pointer">
+          <div class="carousel-slide-overlay">
+            <div class="carousel-slide-tag">PLAYLIST 01</div>
+            <div class="carousel-slide-title">Throwback Pop</div>
+          </div>
+        </div>
+        <div class="carousel-slide" id="slide-1">
+          <img id="picture-2" src="images/throwbackpop.jpg" alt="Throwback Pop" style="cursor:pointer">
+          <div class="carousel-slide-overlay">
+            <div class="carousel-slide-tag">PLAYLIST 02</div>
+            <div class="carousel-slide-title">Workout Hits</div>
+          </div>
+        </div>
+        <div class="carousel-slide" id="slide-2">
+          <img id="picture-3" src="images/rockroadtrip.jpg" alt="Rock Road Trip" style="cursor:pointer">
+          <div class="carousel-slide-overlay">
+            <div class="carousel-slide-tag">PLAYLIST 03</div>
+            <div class="carousel-slide-title">Rock Road Trip</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="carousel-controls">
+        <button class="carousel-btn" id="carousel-prev">‹</button>
+        <button class="carousel-btn" id="carousel-next">›</button>
+      </div>
+
+      <div class="carousel-dots">
+        <div class="carousel-dot active" data-idx="0"></div>
+        <div class="carousel-dot" data-idx="1"></div>
+        <div class="carousel-dot" data-idx="2"></div>
+      </div>
+    </div>
+
+    <div id="playlist-info"></div>
+  </section>
+
+</main>
+
+
+<!-- ── SCRIPTS ── -->
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/typeit@7.0.4/dist/typeit.min.js"></script>
+
+<script>
+// ── CAROUSEL ──
+let currentSlide = 0;
+const slides = document.querySelectorAll('.carousel-slide');
+const dots   = document.querySelectorAll('.carousel-dot');
+
+function goTo(idx) {
+  slides[currentSlide].classList.remove('active');
+  dots[currentSlide].classList.remove('active');
+  currentSlide = (idx + slides.length) % slides.length;
+  slides[currentSlide].classList.add('active');
+  dots[currentSlide].classList.add('active');
+}
+
+document.getElementById('carousel-prev').addEventListener('click', () => goTo(currentSlide - 1));
+document.getElementById('carousel-next').addEventListener('click', () => goTo(currentSlide + 1));
+dots.forEach(d => d.addEventListener('click', () => goTo(+d.dataset.idx)));
+setInterval(() => goTo(currentSlide + 1), 4000);
+
+// ── DEEZER PLAYLISTS ──
+const apiKey = "bac4be6256mshbee794f89d91b14p1ac9b6jsn5140f9dffd59";
+
+function loadPlaylist(url, picId) {
+  $.ajax({
+    async: true,
+    crossDomain: true,
+    url: url,
+    method: "GET",
+    headers: {
+      "x-rapidapi-host": "deezerdevs-deezer.p.rapidapi.com",
+      "x-rapidapi-key": apiKey
+    }
+  }).done(function(response) {
+    $(`#${picId}`).on("click", function() {
+      const info = $("#playlist-info");
+      info.empty();
+      for (let i = 0; i < Math.min(4, response.tracks.data.length); i++) {
+        const t = response.tracks.data[i];
+        const chip = $(`<div class="track-chip">
+          <strong>${t.title}</strong>
+          ${t.artist.name} — <em style="color:var(--accent2);font-style:normal">${t.album.title}</em>
+        </div>`);
+        info.append(chip);
+      }
+    });
+  });
+}
+
+loadPlaylist("https://deezerdevs-deezer.p.rapidapi.com/playlist/1964028802", "picture-1");
+loadPlaylist("https://deezerdevs-deezer.p.rapidapi.com/playlist/2532117644", "picture-2");
+loadPlaylist("https://deezerdevs-deezer.p.rapidapi.com/playlist/3126664682", "picture-3");
+
+// ── SEARCH ──
+$(document).ready(function() {
+  $("#search-form").on("submit", function(e) {
+    e.preventDefault();
+    const query = $("#search-input").val().trim();
+    if (!query) return;
+
+    const results = $("#search-results");
+    results.html('<div class="search-empty"><div class="big-icon" style="animation:spin 1s linear infinite">⏳</div></div>');
+
+    $.ajax({
+      async: true,
+      crossDomain: true,
+      url: "https://deezerdevs-deezer.p.rapidapi.com/search?q=" + encodeURIComponent(query),
+      method: "GET",
+      headers: {
+        "x-rapidapi-host": "deezerdevs-deezer.p.rapidapi.com",
+        "x-rapidapi-key": "444d1a61f4mshd57eb459b8b0709p1e745ajsn2ac16a025434"
+      }
+    }).done(function(response) {
+      results.empty();
+
+      if (!response.data || !response.data.length) {
+        results.html('<div class="search-empty"><div class="big-icon">😕</div><p>No results found</p></div>');
+        return;
+      }
+
+      response.data.slice(0, 20).forEach(function(track, i) {
+        const card = $(`
+          <div class="search-card" style="animation-delay:${i * 0.04}s">
+            <img src="${track.album.cover_small}" alt="${track.album.title}">
+            <div class="search-card-info">
+              <div class="search-card-title">${track.title_short}</div>
+              <div class="search-card-artist">${track.artist.name}</div>
+              <div class="search-card-album">${track.album.title}</div>
+              <audio controls style="margin-top:6px;width:100%;height:26px">
+                <source src="${track.preview}" type="audio/mpeg">
+              </audio>
+            </div>
+            <div class="search-card-actions">
+              <button class="btn-add" data-song="${track.title_short}" data-artist="${track.artist.name}" data-album="${track.album.title}" title="Add to playlist">+</button>
+            </div>
+          </div>
+        `);
+        results.append(card);
+      });
+
+      // add to playlist
+      results.on("click", ".btn-add", function() {
+        const btn = $(this);
+        const song   = btn.data("song");
+        const artist = btn.data("artist");
+        const album  = btn.data("album");
+
+        $("#tacoTV").remove();
+
+        const item = $(`
+          <div class="playlist-item">
+            <span><strong>${song}</strong><br>${artist} — <em style="color:var(--accent2);font-style:normal">${album}</em></span>
+            <button class="btn-delete" title="Remove">✕</button>
+          </div>
+        `);
+
+        item.find(".btn-delete").on("click", function() {
+          item.remove();
+        });
+
+        $("#playlist").append(item);
+
+        btn.text("✓").css({"background": "var(--accent3)", "color": "var(--bg)", "border-color": "var(--accent3)"});
+        setTimeout(() => btn.text("+").css({"background": "", "color": "var(--accent3)", "border-color": "var(--accent3)"}), 1500);
+      });
+    });
+  });
+
+  // Export
+  $("#playlistExport").on("click", function() {
+    const items = [];
+    $(".playlist-item span").each(function() {
+      items.push($(this).text().replace(/\n/g, " | "));
+    });
+
+    if (!items.length) {
+      $(this).text("⚠ Playlist is empty!");
+      setTimeout(() => $(this).text("⬇ EXPORT PLAYLIST"), 2000);
+      return;
+    }
+
+    const text = "🌮 Taco's Co Playlist\n\n" + items.map((s, i) => `${i+1}. ${s}`).join("\n");
+    navigator.clipboard.writeText(text).then(() => {
+      $(this).text("✓ COPIED TO CLIPBOARD!");
+      setTimeout(() => $(this).text("⬇ EXPORT PLAYLIST"), 2500);
+    });
+  });
+});
+</script>
+
+</body>
+</html>
